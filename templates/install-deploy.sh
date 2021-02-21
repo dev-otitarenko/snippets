@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #
 # User-defined values
 # Path to the public rsa key: ssh-keygen -m PEM -t rsa -b 4096
