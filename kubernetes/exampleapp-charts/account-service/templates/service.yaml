@@ -14,7 +14,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: iris-application
+    app.kubernetes.io/part-of: example-application
     helm.sh/chart: {{ $chart }}
 spec:
   ports:

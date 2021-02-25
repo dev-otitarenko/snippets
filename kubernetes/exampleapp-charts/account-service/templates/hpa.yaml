@@ -1,5 +1,5 @@
 ###################################################################################################
-# account-service HPA Resrouce Metrics (CPU utilization threshold)
+# account-service HPA Resource Metrics (CPU utilization threshold)
 ###################################################################################################
 {{- if .Values.autoscaling.enabled }}
 {{- $fullname := include "account-service.fullname" . | replace "." "" }}
@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: iris-application
+    app.kubernetes.io/part-of: example-application
     helm.sh/chart: {{ include "account-service.chart" . }}
 spec:
   scaleTargetRef:
