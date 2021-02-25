@@ -1,0 +1,6 @@
+apiVersion: v2
+name: infra
+description: infrastructure management
+version: 2.0.0
+appVersion: 2.0.0
+type: application
