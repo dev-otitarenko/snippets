@@ -1,0 +1,6 @@
+apiVersion: v2
+name: logs-service
+description: app microservices 'logs-service'
+version: 2.0.0
+appVersion: 2.0.0
+type: application

@@ -1,0 +1,86 @@
+# Default values for logs-service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+nameOverride: logs-service
+fullnameOverride: ""
+replicaCount: 1
+
+# image
+image:
+  name:
+  tag:
+  port: 8815
+  pullPolicy: IfNotPresent
+
+# Resources
+resources:
+  jvmOpts: -Xmx820M -XX:MaxRAM=1024M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+
+# probes
+readinessProbe:
+  httpGet:
+    path: /logs/actuator/health
+    port: 8815
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 2
+  failureThreshold: 5
+livenessProbe:
+  httpGet:
+    path: /logs/actuator/health
+    port: 8815
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 10
+  failureThreshold: 5
+
+# telemetry
+telemetry:
+  level: ERROR
+
+reason: unknown
+
+# ingress
+ingress:
+  tls: false
+  host:
+  path: /api/(logs/.*)
+  tlsSecretName:
+
+# tags
+tags:
+  dev: false
+  prod: false
+
+# Service account identity
+serviceAccount: account-app
+
+# Security Context
+securityContext:
+  enabled: true
+  fsGroup: 1
+  runAsUser: 10007
+
+# Horizontal Pod Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 90
+
+# service
+service:
+  targetPort: 8815
+  targetProtocol: TCP
+
+# logs
+logs:
+  volume:
+    secretName:
+    shareName:
