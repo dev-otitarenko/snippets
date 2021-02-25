@@ -1,0 +1,27 @@
+###################################################################################################
+# Frontend service
+###################################################################################################
+{{- $appname := include "frontend.name" . -}}
+{{- $chart := include "frontend.chart" . -}}
+{{- $instancename := .Release.Name }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "frontend.versionappname" . | replace "." "" }}
+  labels:
+    app.kubernetes.io/name: {{ $appname }}
+    app.kubernetes.io/instance: {{ $instancename }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: example-application
+    helm.sh/chart: {{ $chart }}
+spec:
+  ports:
+    - name: frontend-port
+      protocol: {{ .Values.service.targetProtocol }}
+      port: {{ .Values.image.port }}
+      targetPort: {{ .Values.service.targetPort }}
+  selector:
+    app.kubernetes.io/name: {{ $appname }}
+    app.kubernetes.io/instance: {{ $instancename }}
