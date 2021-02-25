@@ -1,0 +1,61 @@
+#---------------------------------------------------------
+#  deny ingress/egress
+#---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-anyaccess
+spec:
+  podSelector:
+    matchLabels:
+       role: backend
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+#---------------------------------------------------------
+#  allow egress traffic to kubedns
+#---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-iris-to-kubedns
+spec:
+  podSelector:
+    matchLabels:
+      role: backend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+      namespaceSelector: {}
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP    
+
+---
+#---------------------------------------------------------
+# allow access from backend to external DB
+#---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-to-database
+spec:
+  podSelector:
+    matchLabels:
+      role: backend1
+  policyTypes:
+  - Egress
+  egress:
+  - ports:
+    - port: 1433
+      protocol: UDP
+    - port: 1433
+      protocol: TCP

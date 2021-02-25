@@ -1,0 +1,108 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: logs-service
+  labels:
+    deployment: logs-service
+spec:
+  selector:
+    app: logs-service-app
+  ports:
+    - name: logs-service-port
+      protocol: TCP
+      port: 8813
+      targetPort: 8813
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logs-service
+  labels:
+    deployment: logs-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logs-service-app
+  template:
+    metadata:
+      labels:
+        app: logs-service-app
+    spec:
+      containers:
+        - name: logs-service-container
+          image: myregistry.azurecr.io/app/logs-service:latest
+          env:
+            - name: rabbitmq.user
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.user
+            - name: rabbitmq.psw
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.psw
+            - name: rabbitmq.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.server
+            - name: rabbitmq.port
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.port          
+            - name: auth-server.url
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.auth-server.url
+            - name: auth-server.user
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-auth
+                  key: user
+            - name: auth-server.secret
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-auth
+                  key: password 
+            - name: app.eureka.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.eureka.server
+            - name: app.db.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.db.server
+            - name: app.db.name
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.db.name
+            - name: app.db.user
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-db
+                  key: user
+            - name: app.db.psw
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-db
+                  key: password
+          ports:
+            - containerPort: 8813
+          imagePullPolicy: Always
+          volumeMounts:
+          - mountPath: /tmp/logs
+            name: logs-folder
+      volumes:
+      - azureFile:
+          readOnly: false
+          secretName: scrt-applstorage
+          shareName: app-logs/logs-service
+        name: logs-folder

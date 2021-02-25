@@ -1,0 +1,22 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: rabbitmq-admin
+  namespace: ns-nahu-iris
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+spec:
+  tls:
+    - hosts:
+        - iris.iaea.org
+      secretName: scrt-ingress-tls
+  rules:
+    - host: iris.iaea.org
+      http:
+        paths:
+          - path: /rabbit-admin/(.*)
+            backend:
+              serviceName: rabbitmq-discovery-service
+              servicePort: 15672

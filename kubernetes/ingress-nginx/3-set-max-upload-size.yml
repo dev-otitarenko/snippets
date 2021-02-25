@@ -1,0 +1,26 @@
+# General ingress
+# 1. Don't forget about scrt-ingress-tls if you desire to work over ssl
+# 2. proxy-body-size & nginx.org/client-max-body-size - allow to load large files through nginx-controller
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: ingress-backend
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.org/client-max-body-size: "50m"
+spec:
+  tls:
+    - hosts:
+        - yourdomain.com
+      secretName: scrt-ingress-tls
+  rules:
+    - host: yourdomain.com
+      http:
+        paths:
+          - path: /api/(backend/.*)
+            backend:
+              serviceName: backend
+              servicePort: 8810
