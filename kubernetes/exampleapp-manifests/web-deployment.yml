@@ -1,0 +1,68 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: ing-frontend
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+spec:
+  tls:
+    - hosts:
+        - yourdomain.com
+      secretName: scrt-ingress-tls
+  rules:
+    - host: yourdomain.com
+      http:
+        paths:
+          - path: /(.*)
+            backend:
+              serviceName: frontend
+              servicePort: 80
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - image: myregistry.azurecr.io/app/frontend:latest
+        name: frontend
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: logs-folder          
+      volumes:
+      - azureFile:
+           readOnly: false
+           secretName: scrt-applstorage
+           shareName: app-logs/nginx
+        name: logs-folder
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80         

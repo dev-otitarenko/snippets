@@ -1,0 +1,93 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: auth-service
+  labels:
+    deployment: auth-service
+spec:
+  selector:
+    app: auth-service-app
+  ports:
+    - name: auth-service-port
+      protocol: TCP
+      port: 8812
+      targetPort: 8812
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels:
+    deployment: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service-app
+  template:
+    metadata:
+      labels:
+        app: auth-service-app
+    spec:
+      containers:
+        - name: auth-service-container
+          image: myregistry.azurecr.io/app/auth-server:latest
+          env:
+            - name: rabbitmq.user
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.user
+            - name: rabbitmq.psw
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.psw
+            - name: rabbitmq.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.server
+            - name: rabbitmq.port
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.port
+            - name: app.eureka.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.eureka.server
+            - name: app.db.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.db.server
+            - name: app.db.name
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.db.name
+            - name: app.db.user
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-db
+                  key: user
+            - name: app.db.psw
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-db
+                  key: password
+          ports:
+            - containerPort: 8812
+          imagePullPolicy: Always
+          volumeMounts:
+          - mountPath: /tmp/logs
+            name: logs-folder
+      volumes:
+      - azureFile:
+          readOnly: false
+          secretName: scrt-applstorage
+          shareName: app-logs/auth-service
+        name: logs-folder

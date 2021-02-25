@@ -1,0 +1,242 @@
+#---------------------------------------------------------
+#  deny ingress/egress
+#---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-anyaccess
+spec:
+  podSelector:
+    matchLabels:
+       app.kubernetes.io/part-of: iris-application
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+#---------------------------------------------------------
+#  allow egress traffic to kubedns
+#---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-iris-to-kubedns
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: iris-application
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+      namespaceSelector: {}
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP    
+
+---
+#---------------------------------------------------------
+# allow access from backend to external DB
+#---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-to-database
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/part-of: iris-application
+  policyTypes:
+  - Egress
+  egress:
+    ports:
+    - port: 1433
+      protocol: UDP
+    - port: 1433
+      protocol: TCP
+
+---
+#---------------------------------------------------------
+#  allow access from ingress-controller to frontend
+#---------------------------------------------------------
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-lb-to-frontend
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: frontend
+      app.kubernetes.io/part-of: iris-application
+  policyTypes:
+  - Ingress      
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: nginx-ingress
+          component: controller
+
+---
+#---------------------------------------------------------
+#  allow ingress/egress from eureka to backend
+#---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-eureka-access
+spec:
+  podSelector:
+    matchLabels:
+      app: eureka-app
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: backend
+          app.kubernetes.io/part-of: iris-application
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: backend
+          app.kubernetes.io/part-of: iris-application           
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-access
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: iris-application
+      app.kubernetes.io/name: gateway-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: frontend
+          app.kubernetes.io/part-of: iris-application
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: account-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: auth-service          
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: dicts-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: doc-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: logs-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: fs-service          
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: account-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: auth-service          
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: dicts-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: doc-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: logs-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/name: fs-service                                          
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-to-account-service
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: iris-application
+      app.kubernetes.io/name: account-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/component: backend
+          app.kubernetes.io/client-account-service: "true"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-to-dicts-service
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: iris-application
+      app.kubernetes.io/name: dicts-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/component: backend
+          app.kubernetes.io/client-dicts-service: "true"          
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-to-fs-service
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: iris-application
+      app.kubernetes.io/name: fs-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: iris-application
+          app.kubernetes.io/component: backend
+          app.kubernetes.io/client-fs-service: "true"
