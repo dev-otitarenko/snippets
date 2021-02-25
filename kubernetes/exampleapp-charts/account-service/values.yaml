@@ -1,0 +1,92 @@
+# Default values for account-service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+nameOverride: account-service
+fullnameOverride: ""
+replicaCount: 1
+
+# Image
+image:
+  name:
+  tag:
+  port: 8811
+  pullPolicy: IfNotPresent
+
+# Resources
+resources:
+  jvmOpts: -Xmx820M -XX:MaxRAM=1024M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+
+# probes
+readinessProbe:
+  httpGet:
+    path: /account/actuator/health
+    port: 8811
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 20
+  failureThreshold: 5
+livenessProbe:
+  httpGet:
+    path: /account/actuator/health
+    port: 8811
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 10
+  failureThreshold: 5
+
+# telemetry
+telemetry:
+  level: ERROR
+
+# reason
+reason: unknown
+
+# ingress
+ingress:
+  tls: false
+  host:
+  path: /api/(account/.*)
+  tlsSecretName:
+
+# tags
+tags:
+  dev: false
+  prod: false
+
+# Service account identity
+serviceAccount: account-iris
+
+# Security Context
+securityContext:
+  enabled: true
+  fsGroup: 1
+  runAsUser: 10001
+
+# Horizontal Pod Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 90
+
+# service info
+service:
+  targetPort: 8811
+  targetProtocol: TCP
+
+# microservices clients
+ms:
+  clients:
+    dictsService: http://dicts-service:8813
+
+# logs
+logs:
+  volume:
+    secretName:
+    shareName:   
