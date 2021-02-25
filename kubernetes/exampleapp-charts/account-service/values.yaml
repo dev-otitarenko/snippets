@@ -60,7 +60,7 @@ tags:
   prod: false
 
 # Service account identity
-serviceAccount: account-iris
+serviceAccount: account-app
 
 # Security Context
 securityContext:
