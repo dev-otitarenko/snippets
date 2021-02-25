@@ -1,0 +1,30 @@
+###################################################################################################
+# doc-service HPA Resrouce Metrics (CPU utilization threshold)
+###################################################################################################
+{{- if .Values.autoscaling.enabled }}
+{{- $fullname := include "doc-service.fullname" . | replace "." "" }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $fullname }}-hpa
+  labels:
+    app.kubernetes.io/name: {{ include "doc-service.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: example-application
+    helm.sh/chart: {{ include "doc-service.chart" . }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $fullname }}
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
