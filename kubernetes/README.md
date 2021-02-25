@@ -1,6 +1,6 @@
 #
 
-[Here](https://github.com/dev-otitarenko/others/blob/main/kubernetes/CONTAINER-SECURITY.md) is information about container security in K8S
+[Here](https://github.com/dev-otitarenko/snippets/blob/main/kubernetes/CONTAINER-SECURITY.md) is information about container security in K8S
 
 # Display CPU/MEMORY usage for nodes
 
