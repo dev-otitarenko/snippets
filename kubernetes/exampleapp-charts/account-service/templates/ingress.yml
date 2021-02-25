@@ -1,0 +1,27 @@
+###################################################################################################
+# ACCOUNT-SERVICE INGRESSES. ALLOW ACCESS.
+###################################################################################################
+{{- $relname := .Release.Name }}
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: ing-{{ $relname }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+spec:
+  {{ if .Values.ingress.tls }}
+  tls:
+  - hosts:
+    - {{ .Values.ingress.host }}
+    secretName: {{ .Values.ingress.tlsSecretName }}
+  {{ end }}
+  rules:
+  - host: {{ .Values.ingress.host }}
+    http:
+      paths:
+      - path: {{ .Values.ingress.path }}
+        backend:
+          serviceName: {{ include "account-service.name" .}}
+          servicePort: {{ .Values.service.targetPort }}

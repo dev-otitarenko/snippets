@@ -1,0 +1,94 @@
+# Default values for doc-service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+nameOverride: doc-service
+fullnameOverride: ""
+replicaCount: 2
+
+# image
+image:
+  name:
+  tag:
+  port: 8814
+  pullPolicy: IfNotPresent
+
+# Resources
+resources:
+  jvmOpts: -Xmx1300M -XX:MaxRAM=1600M -XX:+UnlockExperimentalVMOptions
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1600Mi
+
+# probes
+readinessProbe:
+  httpGet:
+    path: /doc/actuator/health
+    port: 8814
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 20
+  failureThreshold: 5
+livenessProbe:
+  httpGet:
+    path: /doc/actuator/health
+    port: 8814
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 10
+  failureThreshold: 5
+
+# telemetry
+telemetry:
+  level: ERROR
+
+reason: unknown
+
+# ingress
+ingress:
+  tls: false
+  host:
+  path: /api/(doc/.*)
+  tlsSecretName:
+
+# tags
+tags:
+  dev: false
+  prod: false
+
+# Service account identity
+serviceAccount: account-app
+
+# Security Context
+securityContext:
+  enabled: true
+  fsGroup: 1
+  runAsUser: 10004
+
+# Horizontal Pod Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 90
+
+# service
+service:
+  targetPort: 8814
+  targetProtocol: TCP
+
+# microservices clients
+ms:
+  clients:
+    accountService: http://account-service:8811
+    dictsService: http://dicts-service:8813
+    logsService: http://logs-service:8815
+    fsService: http://fs-service:8816
+
+# logs
+logs:
+  volume:
+    secretName:
+    shareName:

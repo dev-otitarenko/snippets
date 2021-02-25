@@ -1,0 +1,128 @@
+###################################################################################################
+# Auth-service deployment
+###################################################################################################
+{{- $fullname := include "auth-service.fullname" . | replace "." "" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}
+  labels:
+    app.kubernetes.io/name: {{ include "auth-service.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: example-application
+    helm.sh/chart: {{ include "auth-service.chart" . }}
+    aadpodidbinding: {{ $fullname }}
+  annotations:
+    kubernetes.io/change-cause: {{ .Values.reason }}
+spec:
+  replicas: {{ default 1 .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "auth-service.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "auth-service.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/part-of: example-application
+        app.kubernetes.io/client-gateway-service: "true"
+        helm.sh/chart: {{ include "auth-service.chart" . }}
+        aadpodidbinding: {{ $fullname }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsNonRoot: true
+      containers:
+        - name: auth-service-container
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          readinessProbe:
+            httpGet:
+              path: {{ required "readinessProbe.httpGet.path is required" .Values.readinessProbe.httpGet.path }}
+              port: {{ required "readinessProbe.httpGet.port is required" .Values.readinessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ required "livenessProbe.httpGet.path is required" .Values.livenessProbe.httpGet.path }}
+              port: {{ required "livenessProbe.httpGet.port is required" .Values.livenessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          ports:
+            - containerPort: {{ .Values.image.port }}
+          resources:
+            requests:
+              cpu: {{ required "A valid .Values.resources.requests.cpu entry required!" .Values.resources.requests.cpu }}
+              memory: {{ required "A valid .Values.resources.requests.memory entry required!" .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ required "A valid .Values.resources.limits.cpu entry required!" .Values.resources.limits.cpu }}
+              memory: {{ required "A valid .Values.resources.limits.memory entry required!" .Values.resources.limits.memory }}            
+          env:
+            - name: JAVA_OPTS
+              value: {{ .Values.resources.jvmOpts }}
+            - name: app.telemetry.level
+              value: {{ .Values.telemetry.level }}
+            - name: app.signing-key
+              value: {{ .Values.signingKey }}
+            - name: rabbitmq.user
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.user
+            - name: rabbitmq.psw
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.psw
+            - name: rabbitmq.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.server
+            - name: rabbitmq.port
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: rabbitmq.port
+            - name: app.db.server
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.db.server
+            - name: app.db.name
+              valueFrom:
+                configMapKeyRef:
+                  name: cfg-applgeneral
+                  key: app.db.name
+            - name: app.db.user
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-db
+                  key: user
+            - name: app.db.psw
+              valueFrom:
+                secretKeyRef:
+                  name: scrt-db
+                  key: password                     
+          volumeMounts:
+            - mountPath: /tmp/logs
+              name: logs-folder
+      volumes:
+        - azureFile:
+            readOnly: false
+            secretName: {{ .Values.logs.volume.secretName }}
+            shareName: {{ .Values.logs.volume.shareName }}
+          name: logs-folder

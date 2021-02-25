@@ -1,0 +1,30 @@
+# In GKE need to get RBAC permissions first with
+# kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin [--user=<user-name>|--group=<group-name>]
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: account-app
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: role-app
+rules:
+- apiGroups: [""]
+  resources: ["secrets","pods","pods/exec","configmaps"]
+  verbs: ["get","list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: rolebinding-app
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role-app
+subjects:
+- kind: ServiceAccount
+  name: account-app

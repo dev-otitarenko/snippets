@@ -1,0 +1,27 @@
+###################################################################################################
+# Logs-service service
+  ###################################################################################################
+  {{- $appname := include "logs-service.name" . -}}
+  {{- $chart := include "logs-service.chart" . -}}
+  {{- $instancename := .Release.Name }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "logs-service.name" .}}
+  labels:
+    app.kubernetes.io/name: {{ $appname }}
+    app.kubernetes.io/instance: {{ $instancename }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: example-application
+    helm.sh/chart: {{ $chart }}
+spec:
+  ports:
+    - name: dicts-service-port
+      protocol: {{ .Values.service.targetProtocol }}
+      port: {{ .Values.image.port }}
+      targetPort: {{ .Values.service.targetPort }}
+  selector:
+    app.kubernetes.io/name: {{ $appname }}
+    app.kubernetes.io/instance: {{ $instancename }}
