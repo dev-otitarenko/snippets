@@ -34,7 +34,7 @@ readinessProbe:
 livenessProbe:
   httpGet:
     path: /logs/actuator/health
-    port: 8815
+    port: 8813
   initialDelaySeconds: 60
   periodSeconds: 15
   timeoutSeconds: 10
@@ -76,7 +76,7 @@ autoscaling:
 
 # service
 service:
-  targetPort: 8815
+  targetPort: 8813
   targetProtocol: TCP
 
 # logs
