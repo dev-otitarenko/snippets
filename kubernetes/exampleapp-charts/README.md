@@ -1,6 +1,6 @@
 # DESCRIPTION
 
-Short instruction for the application installion manually.
+Short instruction for the application installation manually.
 The documentation may differ of real values and is not considered real the documentation for the manual installation.
 
 ## Prerequisites
